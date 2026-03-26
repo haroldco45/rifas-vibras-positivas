@@ -3,48 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Rifas - Vibras Positivas</title>
+    <title>Gestión de Rifas | Vibras Positivas</title>
     <style>
-        :root { --verde: #5d7a4d; --rojo: #c0392b; --gris: #f4f7f1; }
-        body { font-family: sans-serif; background: var(--gris); text-align: center; padding: 10px; }
+        :root { --verde: #5d7a4d; --rojo: #c0392b; --gris-f: #f4f7f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris-f); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        .card { background: white; max-width: 500px; margin: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: var(--verde); color: white; padding: 15px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 15px; }
-        .num { aspect-ratio: 1; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; }
-        .num.vendido { background: var(--rojo); color: white; }
+        /* Panel de Configuración */
+        .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
+        .admin-config input { width: calc(100% - 24px); padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
 
-        /* Ventanita Flotante */
-        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 100; width: 80%; max-width: 300px; }
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
+        /* Tarjeta Principal */
+        .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--verde); color: white; padding: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
+
+        .info-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .info-bar div { border-left: 3px solid var(--verde); padding-left: 8px; }
+
+        /* Cuadrícula */
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 15px; }
+        .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .num.vendido { background: var(--rojo); color: white; border-color: var(--rojo); }
+
+        /* Modal */
+        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 320px; text-align: center; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; }
         
-        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { background: var(--verde); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .btn-cancelar { background: #999; margin-left: 5px; }
-        
-        .footer { margin-top: 20px; font-size: 0.8rem; color: #666; font-weight: bold; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-save { background: var(--verde); color: white; }
+        .btn-close { background: #eee; color: #666; }
+
+        .footer { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #777; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="header">
-            <h2 id="titulo">Control de Rifa</h2>
-            <p id="info">Toca un número para registrar al comprador</p>
-        </div>
-
-        <div class="grid" id="cuadricula"></div>
+    <div class="admin-config">
+        <strong style="color: var(--verde);">⚙️ Configurar Datos:</strong>
+        <input type="text" id="cfg-titulo" placeholder="Nombre de la Rifa" oninput="actualizarUI()">
+        <input type="text" id="cfg-premio" placeholder="Premio" oninput="actualizarUI()">
+        <input type="text" id="cfg-fecha" placeholder="Fecha del Sorteo" oninput="actualizarUI()">
+        <input type="text" id="cfg-contacto" placeholder="Responsable / WhatsApp" oninput="actualizarUI()">
     </div>
 
-    <div id="overlay"></div>
+    <div class="card">
+        <div class="header">
+            <h1 id="out-titulo">Control de Rifa</h1>
+        </div>
+
+        <div class="info-bar">
+            <div><strong>🎁 Premio:</strong> <br><span id="out-premio">---</span></div>
+            <div><strong>📅 Sorteo:</strong> <br><span id="out-fecha">---</span></div>
+            <div style="grid-column: span 2;"><strong>👤 Responsable:</strong> <span id="out-contacto">---</span></div>
+        </div>
+
+        <div class="grid" id="gridConten"></div>
+    </div>
+
+    <div id="overlay" onclick="cerrarModal()"></div>
     <div id="modal">
-        <h3 id="modal-titulo">Número 00</h3>
-        <input type="text" id="nombre-cliente" placeholder="Nombre del cliente">
-        <input type="text" id="tel-cliente" placeholder="Teléfono">
-        <div id="info-existente" style="margin-bottom: 10px; color: var(--rojo); font-weight: bold;"></div>
-        <button onclick="guardarVenta()">Guardar</button>
-        <button class="btn-cancelar" onclick="cerrarModal()">Cerrar</button>
+        <h2 id="modal-num" style="color: var(--verde);">Número 00</h2>
+        <p id="label-status" style="font-size: 0.9rem; margin-bottom: 10px;"></p>
+        <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Nombre del Comprador">
+        <div class="modal-btns">
+            <button class="btn-save" onclick="guardar()">Guardar</button>
+            <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+        </div>
     </div>
 
     <div class="footer">
@@ -52,65 +77,87 @@
     </div>
 
     <script>
-        let datosRifa = JSON.parse(localStorage.getItem('base_rifa_vibras')) || {};
-        let numeroActual = null;
+        // Cargar datos guardados
+        let rifaBD = JSON.parse(localStorage.getItem('bd_rifa_vibras')) || {};
+        let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'' };
+        let numSel = null;
 
-        const grid = document.getElementById('cuadricula');
-        const modal = document.getElementById('modal');
-        const overlay = document.getElementById('overlay');
+        // Iniciar campos de config
+        document.getElementById('cfg-titulo').value = configBD.t;
+        document.getElementById('cfg-premio').value = configBD.p;
+        document.getElementById('cfg-fecha').value = configBD.f;
+        document.getElementById('cfg-contacto').value = configBD.c;
 
-        function dibujar() {
-            grid.innerHTML = '';
+        function actualizarUI() {
+            // Guardar configuración
+            configBD = {
+                t: document.getElementById('cfg-titulo').value,
+                p: document.getElementById('cfg-premio').value,
+                f: document.getElementById('cfg-fecha').value,
+                c: document.getElementById('cfg-contacto').value
+            };
+            localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
+
+            // Mostrar en pantalla
+            document.getElementById('out-titulo').innerText = configBD.t || "CONTROL DE RIFA";
+            document.getElementById('out-premio').innerText = configBD.p || "---";
+            document.getElementById('out-fecha').innerText = configBD.f || "---";
+            document.getElementById('out-contacto').innerText = configBD.c || "---";
+        }
+
+        function dibujarGrid() {
+            const container = document.getElementById('gridConten');
+            container.innerHTML = '';
             for (let i = 0; i < 100; i++) {
                 let n = i.toString().padStart(2, '0');
                 let div = document.createElement('div');
-                div.className = 'num' + (datosRifa[n] ? ' vendido' : '');
+                div.className = 'num' + (rifaBD[n] ? ' vendido' : '');
                 div.innerText = n;
                 div.onclick = () => abrirModal(n);
-                grid.appendChild(div);
+                container.appendChild(div);
             }
         }
 
         function abrirModal(n) {
-            numeroActual = n;
-            document.getElementById('modal-titulo').innerText = "Número " + n;
+            numSel = n;
+            document.getElementById('modal-num').innerText = "Número " + n;
+            const inputNom = document.getElementById('c-nombre');
+            const label = document.getElementById('label-status');
             
-            if (datosRifa[n]) {
-                document.getElementById('info-existente').innerText = "Vendido a: " + datosRifa[n].nombre;
-                document.getElementById('nombre-cliente').value = datosRifa[n].nombre;
-                document.getElementById('tel-cliente').value = datosRifa[n].tel;
+            if (rifaBD[n]) {
+                label.innerText = "Estado: VENDIDO";
+                label.style.color = "var(--rojo)";
+                inputNom.value = rifaBD[n].nombre;
             } else {
-                document.getElementById('info-existente').innerText = "";
-                document.getElementById('nombre-cliente').value = "";
-                document.getElementById('tel-cliente').value = "";
+                label.innerText = "Estado: DISPONIBLE";
+                label.style.color = "gray";
+                inputNom.value = "";
             }
             
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            document.getElementById('modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
         }
 
         function cerrarModal() {
-            modal.style.display = 'none';
-            overlay.style.display = 'none';
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
         }
 
-        function guardarVenta() {
-            const nombre = document.getElementById('nombre-cliente').value;
-            const tel = document.getElementById('tel-cliente').value;
-
-            if (nombre.trim() === "") {
-                // Si el nombre está vacío, borramos el registro (lo liberamos)
-                delete datosRifa[numeroActual];
+        function guardar() {
+            const nom = document.getElementById('c-nombre').value;
+            if (nom.trim() === "") {
+                delete rifaBD[numSel];
             } else {
-                datosRifa[numeroActual] = { nombre: nombre, tel: tel };
+                rifaBD[numSel] = { nombre: nom };
             }
-
-            localStorage.setItem('base_rifa_vibras', JSON.stringify(datosRifa));
-            dibujar();
+            localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
+            dibujarGrid();
             cerrarModal();
         }
 
-        dibujar();
+        // Inicio
+        actualizarUI();
+        dibujarGrid();
     </script>
 </body>
 </html>
