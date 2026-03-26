@@ -3,215 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Rifas | Vibras Positivas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <title>Gestión de Rifas - Vibras Positivas</title>
     <style>
-        :root {
-            --color-principal: #5d7a4d; /* Verde elegante */
-            --color-fondo: #f4f7f1;
-            --color-marcado: #c0392b; /* Rojo para tachar */
-            --color-numero: #2c3e50;
-        }
+        :root { --verde: #5d7a4d; --rojo: #c0392b; --gris: #f4f7f1; }
+        body { font-family: sans-serif; background: var(--gris); text-align: center; padding: 10px; }
+        
+        .card { background: white; max-width: 500px; margin: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--verde); color: white; padding: 15px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 15px; }
+        .num { aspect-ratio: 1; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; }
+        .num.vendido { background: var(--rojo); color: white; }
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--color-fondo);
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* Panel de administración */
-        .admin-panel {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            border-left: 5px solid var(--color-principal);
-        }
-
-        .admin-panel h2 { margin-top: 0; font-size: 1.2rem; color: var(--color-principal); }
-
-        .form-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        input {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        input:focus { outline: 2px solid var(--color-principal); border-color: transparent; }
-
-        /* Tarjeta de la Rifa */
-        .raffle-card {
-            background: #fff;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
-
-        .raffle-header {
-            background: var(--color-principal);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .raffle-header h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-
-        .raffle-body { padding: 25px; }
-
-        .data-display {
-            display: flex;
-            justify-content: space-around;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        /* La Cuadrícula */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .slot {
-            aspect-ratio: 1;
-            background: #ebedef;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-            color: var(--color-numero);
-            border: 1px solid #d5d8dc;
-        }
-
-        .slot:hover { transform: scale(1.1); background: #d5d8dc; }
-
-        .slot.taken {
-            background: var(--color-marcado);
-            color: white;
-            position: relative;
-        }
-
-        .slot.taken::after {
-            content: "✕";
-            position: absolute;
-            font-size: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 0.9rem;
-            color: #7f8c8d;
-        }
-
-        .signature {
-            margin-top: 30px;
-            text-align: center;
-            font-weight: bold;
-            color: var(--color-principal);
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
-        }
-
-        @media (max-width: 600px) {
-            .form-group { grid-template-columns: 1fr; }
-            .grid { grid-template-columns: repeat(5, 1fr); }
-        }
+        /* Ventanita Flotante */
+        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 100; width: 80%; max-width: 300px; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
+        
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { background: var(--verde); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .btn-cancelar { background: #999; margin-left: 5px; }
+        
+        .footer { margin-top: 20px; font-size: 0.8rem; color: #666; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="admin-panel">
-        <h2>⚙️ Configuración de la Rifa</h2>
-        <div class="form-group">
-            <input type="text" id="in-titulo" placeholder="Nombre: Ej. Gran Rifa Pro-Fondos" oninput="sync()">
-            <input type="text" id="in-premio" placeholder="Premio: Ej. Un Celular" oninput="sync()">
-            <input type="text" id="in-responsable" placeholder="Responsable / Celular" oninput="sync()">
-            <input type="text" id="in-fecha" placeholder="Fecha del Sorteo" oninput="sync()">
+    <div class="card">
+        <div class="header">
+            <h2 id="titulo">Control de Rifa</h2>
+            <p id="info">Toca un número para registrar al comprador</p>
         </div>
+
+        <div class="grid" id="cuadricula"></div>
     </div>
 
-    <div class="raffle-card">
-        <div class="raffle-header">
-            <h1 id="out-titulo">TÍTULO DE RIFA</h1>
-        </div>
-
-        <div class="raffle-body">
-            <div class="data-display">
-                <div><strong>🎁 Premio:</strong> <span id="out-premio">----</span></div>
-                <div><strong>📅 Fecha:</strong> <span id="out-fecha">----</span></div>
-                <div><strong>👤 Contacto:</strong> <span id="out-responsable">----</span></div>
-            </div>
-
-            <div class="grid" id="raffleGrid">
-                </div>
-        </div>
-
-        <div class="footer">
-            <p>Haz clic en un número para marcarlo como vendido/apartado.</p>
-        </div>
+    <div id="overlay"></div>
+    <div id="modal">
+        <h3 id="modal-titulo">Número 00</h3>
+        <input type="text" id="nombre-cliente" placeholder="Nombre del cliente">
+        <input type="text" id="tel-cliente" placeholder="Teléfono">
+        <div id="info-existente" style="margin-bottom: 10px; color: var(--rojo); font-weight: bold;"></div>
+        <button onclick="guardarVenta()">Guardar</button>
+        <button class="btn-cancelar" onclick="cerrarModal()">Cerrar</button>
     </div>
 
-    <div class="signature">
+    <div class="footer">
         App desarrollada por Vibras Positivas Derechos de Autor (3117700431)
     </div>
-</div>
 
-<script>
-    // Sincronización de datos
-    function sync() {
-        document.getElementById('out-titulo').innerText = document.getElementById('in-titulo').value || 'TÍTULO DE RIFA';
-        document.getElementById('out-premio').innerText = document.getElementById('in-premio').value || '----';
-        document.getElementById('out-responsable').innerText = document.getElementById('in-responsable').value || '----';
-        document.getElementById('out-fecha').innerText = document.getElementById('in-fecha').value || '----';
-    }
+    <script>
+        let datosRifa = JSON.parse(localStorage.getItem('base_rifa_vibras')) || {};
+        let numeroActual = null;
 
-    // Generar cuadrícula del 00 al 99
-    const gridContainer = document.getElementById('raffleGrid');
-    
-    for (let i = 0; i < 100; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'slot';
-        slot.innerText = i.toString().padStart(2, '0');
-        
-        // Lógica de tachado automático
-        slot.addEventListener('click', () => {
-            slot.classList.toggle('taken');
-            
-            // Opcional: Sonido o alerta de confirmación
-            if(slot.classList.contains('taken')) {
-                console.log("Número " + slot.innerText + " seleccionado.");
+        const grid = document.getElementById('cuadricula');
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('overlay');
+
+        function dibujar() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                let n = i.toString().padStart(2, '0');
+                let div = document.createElement('div');
+                div.className = 'num' + (datosRifa[n] ? ' vendido' : '');
+                div.innerText = n;
+                div.onclick = () => abrirModal(n);
+                grid.appendChild(div);
             }
-        });
+        }
 
-        gridContainer.appendChild(slot);
-    }
-</script>
+        function abrirModal(n) {
+            numeroActual = n;
+            document.getElementById('modal-titulo').innerText = "Número " + n;
+            
+            if (datosRifa[n]) {
+                document.getElementById('info-existente').innerText = "Vendido a: " + datosRifa[n].nombre;
+                document.getElementById('nombre-cliente').value = datosRifa[n].nombre;
+                document.getElementById('tel-cliente').value = datosRifa[n].tel;
+            } else {
+                document.getElementById('info-existente').innerText = "";
+                document.getElementById('nombre-cliente').value = "";
+                document.getElementById('tel-cliente').value = "";
+            }
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
 
+        function cerrarModal() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function guardarVenta() {
+            const nombre = document.getElementById('nombre-cliente').value;
+            const tel = document.getElementById('tel-cliente').value;
+
+            if (nombre.trim() === "") {
+                // Si el nombre está vacío, borramos el registro (lo liberamos)
+                delete datosRifa[numeroActual];
+            } else {
+                datosRifa[numeroActual] = { nombre: nombre, tel: tel };
+            }
+
+            localStorage.setItem('base_rifa_vibras', JSON.stringify(datosRifa));
+            dibujar();
+            cerrarModal();
+        }
+
+        dibujar();
+    </script>
 </body>
 </html>
