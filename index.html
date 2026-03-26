@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Rifas | Vibras Positivas</title>
     <style>
-        :root { --verde: #5d7a4d; --rojo: #c0392b; --gris-f: #f4f7f1; }
+        :root { 
+            --verde-pago: #27ae60; 
+            --rojo-debe: #c0392b; 
+            --gris-f: #f4f7f1; 
+            --verde-header: #5d7a4d;
+        }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-f); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
         .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
@@ -16,24 +21,32 @@
         .btn-import { background: #8e44ad; color: white; font-size: 0.8rem; padding: 8px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
 
         .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: var(--verde); color: white; padding: 20px; text-align: center; }
+        .header { background: var(--verde-header); color: white; padding: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
 
         .info-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        .info-bar div { border-left: 3px solid var(--verde); padding-left: 8px; }
+        .info-bar div { border-left: 3px solid var(--verde-header); padding-left: 8px; }
         .full-row { grid-column: span 2; }
-        .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde); font-size: 1.1rem; }
+        .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde-header); font-size: 1.1rem; }
+
+        /* LEYENDA DE COLORES */
+        .leyenda { display: flex; gap: 15px; padding: 10px; font-size: 0.8rem; font-weight: bold; }
+        .punto { height: 12px; width: 12px; border-radius: 3px; display: inline-block; vertical-align: middle; }
 
         .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 15px; }
-        .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .num.vendido { background: var(--rojo); color: white; border-color: var(--rojo); }
+        .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; color: #333; }
+        
+        /* ESTADOS NUEVOS */
+        .num.estado-pago { background: var(--verde-pago) !important; color: white !important; border-color: #1e8449 !important; }
+        .num.estado-debe { background: var(--rojo-debe) !important; color: white !important; border-color: #943126 !important; }
+        .num.estado-registrado { background: #ddd; color: #555; }
 
         #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 320px; text-align: center; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; }
         
         .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
         button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-save { background: var(--verde); color: white; }
+        .btn-save { background: var(--verde-header); color: white; }
         .btn-close { background: #eee; color: #666; }
 
         .footer { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #777; font-weight: bold; }
@@ -42,7 +55,7 @@
 <body>
 
     <div class="admin-config">
-        <strong style="color: var(--verde);">⚙️ Configurar Datos:</strong>
+        <strong style="color: var(--verde-header);">⚙️ Configurar Datos:</strong>
         <input type="text" id="cfg-titulo" placeholder="Nombre de la Rifa" oninput="actualizarUI()">
         <input type="text" id="cfg-premio" placeholder="Premio" oninput="actualizarUI()">
         <input type="text" id="cfg-precio" placeholder="Precio (Ej: $15.000)" oninput="actualizarUI()">
@@ -68,14 +81,20 @@
             <div class="full-row"><strong>🎰 Lotería:</strong> <span id="out-lote">---</span></div>
             <div class="full-row"><strong>👤 Contacto:</strong> <span id="out-contacto">---</span></div>
         </div>
+
+        <div class="leyenda">
+            <span><span class="punto" style="background:var(--verde-pago)"></span> PAGO</span>
+            <span><span class="punto" style="background:var(--rojo-debe)"></span> DEBE</span>
+        </div>
+
         <div class="grid" id="gridConten"></div>
     </div>
 
     <div id="overlay" onclick="cerrarModal()"></div>
     <div id="modal">
-        <h2 id="modal-num" style="color: var(--verde);">Número 00</h2>
-        <p id="label-status" style="font-size: 0.9rem; margin-bottom: 10px;"></p>
-        <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Nombre del Comprador">
+        <h2 id="modal-num" style="color: var(--verde-header);">Número 00</h2>
+        <p id="label-status" style="font-size: 0.9rem; margin-bottom: 10px; font-weight: bold;"></p>
+        <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;" placeholder="Nombre - Escribe 'pago' o 'debe'">
         <div class="modal-btns">
             <button class="btn-save" onclick="guardar()">Guardar</button>
             <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
@@ -126,7 +145,20 @@
             for (let i = 0; i < 100; i++) {
                 let n = i.toString().padStart(2, '0');
                 let div = document.createElement('div');
-                div.className = 'num' + (rifaBD[n] ? ' vendido' : '');
+                div.className = 'num';
+                
+                // LÓGICA DE COLORES SEGÚN EL TEXTO
+                if (rifaBD[n]) {
+                    const nombreMinus = rifaBD[n].nombre.toLowerCase();
+                    if (nombreMinus.includes('pago')) {
+                        div.classList.add('estado-pago');
+                    } else if (nombreMinus.includes('debe')) {
+                        div.classList.add('estado-debe');
+                    } else {
+                        div.classList.add('estado-registrado');
+                    }
+                }
+
                 div.innerText = n;
                 div.onclick = () => abrirModal(n);
                 container.appendChild(div);
@@ -138,12 +170,22 @@
             document.getElementById('modal-num').innerText = "Número " + n;
             const label = document.getElementById('label-status');
             const inputNom = document.getElementById('c-nombre');
+            
             if (rifaBD[n]) {
-                label.innerText = "Estado: VENDIDO";
-                label.style.color = "var(--rojo)";
+                const txt = rifaBD[n].nombre.toLowerCase();
+                if(txt.includes('pago')) {
+                    label.innerText = "ESTADO: PAGADO (VERDE)";
+                    label.style.color = "var(--verde-pago)";
+                } else if(txt.includes('debe')) {
+                    label.innerText = "ESTADO: DEBE (ROJO)";
+                    label.style.color = "var(--rojo-debe)";
+                } else {
+                    label.innerText = "ESTADO: REGISTRADO";
+                    label.style.color = "#555";
+                }
                 inputNom.value = rifaBD[n].nombre;
             } else {
-                label.innerText = "Estado: DISPONIBLE";
+                label.innerText = "ESTADO: DISPONIBLE";
                 label.style.color = "gray";
                 inputNom.value = "";
             }
