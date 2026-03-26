@@ -17,7 +17,8 @@
 
         .info-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 0.85rem; }
         .info-bar div { border-left: 3px solid var(--verde); padding-left: 8px; }
-        .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde); font-size: 1.1rem; border: none; }
+        .full-row { grid-column: span 2; }
+        .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde); font-size: 1.1rem; }
 
         .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 15px; }
         .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
@@ -40,9 +41,10 @@
         <strong style="color: var(--verde);">⚙️ Configurar Datos:</strong>
         <input type="text" id="cfg-titulo" placeholder="Nombre de la Rifa" oninput="actualizarUI()">
         <input type="text" id="cfg-premio" placeholder="Premio" oninput="actualizarUI()">
-        <input type="text" id="cfg-precio" placeholder="Precio de la boleta (Ej: $10.000)" oninput="actualizarUI()">
+        <input type="text" id="cfg-precio" placeholder="Precio (Ej: $15.000)" oninput="actualizarUI()">
+        <input type="text" id="cfg-lote" placeholder="Lotería (Ej: Medellín últimas 2 cifras)" oninput="actualizarUI()">
         <input type="text" id="cfg-fecha" placeholder="Fecha del Sorteo" oninput="actualizarUI()">
-        <input type="text" id="cfg-contacto" placeholder="Medios de Pago / WhatsApp" oninput="actualizarUI()">
+        <input type="text" id="cfg-contacto" placeholder="Pagos / Contacto" oninput="actualizarUI()">
     </div>
 
     <div class="card">
@@ -54,7 +56,8 @@
             <div class="price-tag">Valor del número: <span id="out-precio">$0</span></div>
             <div><strong>🎁 Premio:</strong> <br><span id="out-premio">---</span></div>
             <div><strong>📅 Sorteo:</strong> <br><span id="out-fecha">---</span></div>
-            <div style="grid-column: span 2;"><strong>👤 Pagos/Contacto:</strong> <span id="out-contacto">---</span></div>
+            <div class="full-row"><strong>🎰 Lotería:</strong> <span id="out-lote">---</span></div>
+            <div class="full-row"><strong>👤 Contacto:</strong> <span id="out-contacto">---</span></div>
         </div>
 
         <div class="grid" id="gridConten"></div>
@@ -77,14 +80,16 @@
 
     <script>
         let rifaBD = JSON.parse(localStorage.getItem('bd_rifa_vibras')) || {};
-        let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'', pr:'' };
+        let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'', pr:'', lt:'' };
         let numSel = null;
 
-        document.getElementById('cfg-titulo').value = configBD.t;
-        document.getElementById('cfg-premio').value = configBD.p;
-        document.getElementById('cfg-fecha').value = configBD.f;
-        document.getElementById('cfg-contacto').value = configBD.c;
-        document.getElementById('cfg-precio').value = configBD.pr;
+        // Cargar datos al iniciar
+        document.getElementById('cfg-titulo').value = configBD.t || "";
+        document.getElementById('cfg-premio').value = configBD.p || "";
+        document.getElementById('cfg-fecha').value = configBD.f || "";
+        document.getElementById('cfg-contacto').value = configBD.c || "";
+        document.getElementById('cfg-precio').value = configBD.pr || "";
+        document.getElementById('cfg-lote').value = configBD.lt || "";
 
         function actualizarUI() {
             configBD = {
@@ -92,7 +97,8 @@
                 p: document.getElementById('cfg-premio').value,
                 f: document.getElementById('cfg-fecha').value,
                 c: document.getElementById('cfg-contacto').value,
-                pr: document.getElementById('cfg-precio').value
+                pr: document.getElementById('cfg-precio').value,
+                lt: document.getElementById('cfg-lote').value
             };
             localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
 
@@ -101,6 +107,7 @@
             document.getElementById('out-fecha').innerText = configBD.f || "---";
             document.getElementById('out-contacto').innerText = configBD.c || "---";
             document.getElementById('out-precio').innerText = configBD.pr || "$0";
+            document.getElementById('out-lote').innerText = configBD.lt || "---";
         }
 
         function dibujarGrid() {
