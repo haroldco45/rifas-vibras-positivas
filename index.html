@@ -11,6 +11,10 @@
         .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
         .admin-config input { width: calc(100% - 24px); padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
 
+        .backup-section { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+        .btn-backup { background: #2c3e50; color: white; font-size: 0.8rem; padding: 8px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
+        .btn-import { background: #8e44ad; color: white; font-size: 0.8rem; padding: 8px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
+
         .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: var(--verde); color: white; padding: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
@@ -42,16 +46,21 @@
         <input type="text" id="cfg-titulo" placeholder="Nombre de la Rifa" oninput="actualizarUI()">
         <input type="text" id="cfg-premio" placeholder="Premio" oninput="actualizarUI()">
         <input type="text" id="cfg-precio" placeholder="Precio (Ej: $15.000)" oninput="actualizarUI()">
-        <input type="text" id="cfg-lote" placeholder="Lotería (Ej: Medellín últimas 2 cifras)" oninput="actualizarUI()">
+        <input type="text" id="cfg-lote" placeholder="Lotería (Ej: Medellín)" oninput="actualizarUI()">
         <input type="text" id="cfg-fecha" placeholder="Fecha del Sorteo" oninput="actualizarUI()">
         <input type="text" id="cfg-contacto" placeholder="Pagos / Contacto" oninput="actualizarUI()">
+        
+        <div class="backup-section">
+            <button class="btn-backup" onclick="exportarDatos()">📥 Descargar Backup</button>
+            <button class="btn-import" onclick="document.getElementById('fileInput').click()">📤 Subir Backup</button>
+            <input type="file" id="fileInput" style="display:none" onchange="importarDatos(event)">
+        </div>
     </div>
 
     <div class="card">
         <div class="header">
             <h1 id="out-titulo">Control de Rifa</h1>
         </div>
-
         <div class="info-bar">
             <div class="price-tag">Valor del número: <span id="out-precio">$0</span></div>
             <div><strong>🎁 Premio:</strong> <br><span id="out-premio">---</span></div>
@@ -59,7 +68,6 @@
             <div class="full-row"><strong>🎰 Lotería:</strong> <span id="out-lote">---</span></div>
             <div class="full-row"><strong>👤 Contacto:</strong> <span id="out-contacto">---</span></div>
         </div>
-
         <div class="grid" id="gridConten"></div>
     </div>
 
@@ -83,13 +91,16 @@
         let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'', pr:'', lt:'' };
         let numSel = null;
 
-        // Cargar datos al iniciar
-        document.getElementById('cfg-titulo').value = configBD.t || "";
-        document.getElementById('cfg-premio').value = configBD.p || "";
-        document.getElementById('cfg-fecha').value = configBD.f || "";
-        document.getElementById('cfg-contacto').value = configBD.c || "";
-        document.getElementById('cfg-precio').value = configBD.pr || "";
-        document.getElementById('cfg-lote').value = configBD.lt || "";
+        function iniciar() {
+            document.getElementById('cfg-titulo').value = configBD.t || "";
+            document.getElementById('cfg-premio').value = configBD.p || "";
+            document.getElementById('cfg-fecha').value = configBD.f || "";
+            document.getElementById('cfg-contacto').value = configBD.c || "";
+            document.getElementById('cfg-precio').value = configBD.pr || "";
+            document.getElementById('cfg-lote').value = configBD.lt || "";
+            actualizarUI();
+            dibujarGrid();
+        }
 
         function actualizarUI() {
             configBD = {
@@ -101,7 +112,6 @@
                 lt: document.getElementById('cfg-lote').value
             };
             localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
-
             document.getElementById('out-titulo').innerText = configBD.t || "CONTROL DE RIFA";
             document.getElementById('out-premio').innerText = configBD.p || "---";
             document.getElementById('out-fecha').innerText = configBD.f || "---";
@@ -126,9 +136,8 @@
         function abrirModal(n) {
             numSel = n;
             document.getElementById('modal-num').innerText = "Número " + n;
-            const inputNom = document.getElementById('c-nombre');
             const label = document.getElementById('label-status');
-            
+            const inputNom = document.getElementById('c-nombre');
             if (rifaBD[n]) {
                 label.innerText = "Estado: VENDIDO";
                 label.style.color = "var(--rojo)";
@@ -138,7 +147,6 @@
                 label.style.color = "gray";
                 inputNom.value = "";
             }
-            
             document.getElementById('modal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
         }
@@ -150,18 +158,43 @@
 
         function guardar() {
             const nom = document.getElementById('c-nombre').value;
-            if (nom.trim() === "") {
-                delete rifaBD[numSel];
-            } else {
-                rifaBD[numSel] = { nombre: nom };
-            }
+            if (nom.trim() === "") { delete rifaBD[numSel]; } 
+            else { rifaBD[numSel] = { nombre: nom }; }
             localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
             dibujarGrid();
             cerrarModal();
         }
 
-        actualizarUI();
-        dibujarGrid();
+        // --- FUNCIONES DE BACKUP ---
+        function exportarDatos() {
+            const data = { rifa: rifaBD, config: configBD };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_rifa_${configBD.t || 'vibras'}.json`;
+            a.click();
+        }
+
+        function importarDatos(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                if (data.rifa && data.config) {
+                    rifaBD = data.rifa;
+                    configBD = data.config;
+                    localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
+                    localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
+                    iniciar();
+                    alert("¡Backup restaurado con éxito!");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        iniciar();
     </script>
 </body>
 </html>
