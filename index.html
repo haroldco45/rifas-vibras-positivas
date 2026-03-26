@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Rifas | Vibras Positivas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-principal: #5d7a4d; /* Verde elegante */
+            --color-fondo: #f4f7f1;
+            --color-marcado: #c0392b; /* Rojo para tachar */
+            --color-numero: #2c3e50;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--color-fondo);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Panel de administración */
+        .admin-panel {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-left: 5px solid var(--color-principal);
+        }
+
+        .admin-panel h2 { margin-top: 0; font-size: 1.2rem; color: var(--color-principal); }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus { outline: 2px solid var(--color-principal); border-color: transparent; }
+
+        /* Tarjeta de la Rifa */
+        .raffle-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .raffle-header {
+            background: var(--color-principal);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .raffle-header h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+
+        .raffle-body { padding: 25px; }
+
+        .data-display {
+            display: flex;
+            justify-content: space-around;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* La Cuadrícula */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .slot {
+            aspect-ratio: 1;
+            background: #ebedef;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            color: var(--color-numero);
+            border: 1px solid #d5d8dc;
+        }
+
+        .slot:hover { transform: scale(1.1); background: #d5d8dc; }
+
+        .slot.taken {
+            background: var(--color-marcado);
+            color: white;
+            position: relative;
+        }
+
+        .slot.taken::after {
+            content: "✕";
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .signature {
+            margin-top: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--color-principal);
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .form-group { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: repeat(5, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="admin-panel">
+        <h2>⚙️ Configuración de la Rifa</h2>
+        <div class="form-group">
+            <input type="text" id="in-titulo" placeholder="Nombre: Ej. Gran Rifa Pro-Fondos" oninput="sync()">
+            <input type="text" id="in-premio" placeholder="Premio: Ej. Un Celular" oninput="sync()">
+            <input type="text" id="in-responsable" placeholder="Responsable / Celular" oninput="sync()">
+            <input type="text" id="in-fecha" placeholder="Fecha del Sorteo" oninput="sync()">
+        </div>
+    </div>
+
+    <div class="raffle-card">
+        <div class="raffle-header">
+            <h1 id="out-titulo">TÍTULO DE RIFA</h1>
+        </div>
+
+        <div class="raffle-body">
+            <div class="data-display">
+                <div><strong>🎁 Premio:</strong> <span id="out-premio">----</span></div>
+                <div><strong>📅 Fecha:</strong> <span id="out-fecha">----</span></div>
+                <div><strong>👤 Contacto:</strong> <span id="out-responsable">----</span></div>
+            </div>
+
+            <div class="grid" id="raffleGrid">
+                </div>
+        </div>
+
+        <div class="footer">
+            <p>Haz clic en un número para marcarlo como vendido/apartado.</p>
+        </div>
+    </div>
+
+    <div class="signature">
+        App desarrollada por Vibras Positivas Derechos de Autor (3117700431)
+    </div>
+</div>
+
+<script>
+    // Sincronización de datos
+    function sync() {
+        document.getElementById('out-titulo').innerText = document.getElementById('in-titulo').value || 'TÍTULO DE RIFA';
+        document.getElementById('out-premio').innerText = document.getElementById('in-premio').value || '----';
+        document.getElementById('out-responsable').innerText = document.getElementById('in-responsable').value || '----';
+        document.getElementById('out-fecha').innerText = document.getElementById('in-fecha').value || '----';
+    }
+
+    // Generar cuadrícula del 00 al 99
+    const gridContainer = document.getElementById('raffleGrid');
+    
+    for (let i = 0; i < 100; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.innerText = i.toString().padStart(2, '0');
+        
+        // Lógica de tachado automático
+        slot.addEventListener('click', () => {
+            slot.classList.toggle('taken');
+            
+            // Opcional: Sonido o alerta de confirmación
+            if(slot.classList.contains('taken')) {
+                console.log("Número " + slot.innerText + " seleccionado.");
+            }
+        });
+
+        gridContainer.appendChild(slot);
+    }
+</script>
+
+</body>
+</html>
