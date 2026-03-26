@@ -8,24 +8,21 @@
         :root { --verde: #5d7a4d; --rojo: #c0392b; --gris-f: #f4f7f1; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-f); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Panel de Configuración */
         .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
         .admin-config input { width: calc(100% - 24px); padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
 
-        /* Tarjeta Principal */
         .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: var(--verde); color: white; padding: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
 
         .info-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; font-size: 0.85rem; }
         .info-bar div { border-left: 3px solid var(--verde); padding-left: 8px; }
+        .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde); font-size: 1.1rem; border: none; }
 
-        /* Cuadrícula */
         .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 15px; }
         .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
         .num.vendido { background: var(--rojo); color: white; border-color: var(--rojo); }
 
-        /* Modal */
         #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 320px; text-align: center; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; }
         
@@ -43,8 +40,9 @@
         <strong style="color: var(--verde);">⚙️ Configurar Datos:</strong>
         <input type="text" id="cfg-titulo" placeholder="Nombre de la Rifa" oninput="actualizarUI()">
         <input type="text" id="cfg-premio" placeholder="Premio" oninput="actualizarUI()">
+        <input type="text" id="cfg-precio" placeholder="Precio de la boleta (Ej: $10.000)" oninput="actualizarUI()">
         <input type="text" id="cfg-fecha" placeholder="Fecha del Sorteo" oninput="actualizarUI()">
-        <input type="text" id="cfg-contacto" placeholder="Responsable / WhatsApp" oninput="actualizarUI()">
+        <input type="text" id="cfg-contacto" placeholder="Medios de Pago / WhatsApp" oninput="actualizarUI()">
     </div>
 
     <div class="card">
@@ -53,9 +51,10 @@
         </div>
 
         <div class="info-bar">
+            <div class="price-tag">Valor del número: <span id="out-precio">$0</span></div>
             <div><strong>🎁 Premio:</strong> <br><span id="out-premio">---</span></div>
             <div><strong>📅 Sorteo:</strong> <br><span id="out-fecha">---</span></div>
-            <div style="grid-column: span 2;"><strong>👤 Responsable:</strong> <span id="out-contacto">---</span></div>
+            <div style="grid-column: span 2;"><strong>👤 Pagos/Contacto:</strong> <span id="out-contacto">---</span></div>
         </div>
 
         <div class="grid" id="gridConten"></div>
@@ -77,32 +76,31 @@
     </div>
 
     <script>
-        // Cargar datos guardados
         let rifaBD = JSON.parse(localStorage.getItem('bd_rifa_vibras')) || {};
-        let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'' };
+        let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'', pr:'' };
         let numSel = null;
 
-        // Iniciar campos de config
         document.getElementById('cfg-titulo').value = configBD.t;
         document.getElementById('cfg-premio').value = configBD.p;
         document.getElementById('cfg-fecha').value = configBD.f;
         document.getElementById('cfg-contacto').value = configBD.c;
+        document.getElementById('cfg-precio').value = configBD.pr;
 
         function actualizarUI() {
-            // Guardar configuración
             configBD = {
                 t: document.getElementById('cfg-titulo').value,
                 p: document.getElementById('cfg-premio').value,
                 f: document.getElementById('cfg-fecha').value,
-                c: document.getElementById('cfg-contacto').value
+                c: document.getElementById('cfg-contacto').value,
+                pr: document.getElementById('cfg-precio').value
             };
             localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
 
-            // Mostrar en pantalla
             document.getElementById('out-titulo').innerText = configBD.t || "CONTROL DE RIFA";
             document.getElementById('out-premio').innerText = configBD.p || "---";
             document.getElementById('out-fecha').innerText = configBD.f || "---";
             document.getElementById('out-contacto').innerText = configBD.c || "---";
+            document.getElementById('out-precio').innerText = configBD.pr || "$0";
         }
 
         function dibujarGrid() {
@@ -155,7 +153,6 @@
             cerrarModal();
         }
 
-        // Inicio
         actualizarUI();
         dibujarGrid();
     </script>
