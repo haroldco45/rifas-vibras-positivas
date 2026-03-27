@@ -10,6 +10,7 @@
             --rojo-debe: #c0392b; 
             --gris-f: #f4f7f1; 
             --verde-header: #5d7a4d;
+            --whatsapp: #25d366;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-f); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
@@ -43,10 +44,12 @@
         #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 320px; text-align: center; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; }
         
-        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-save { background: var(--verde-header); color: white; }
-        .btn-close { background: #eee; color: #666; }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .btn-row { display: flex; gap: 10px; }
+        button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-save { background: var(--verde-header); color: white; flex: 1; }
+        .btn-close { background: #eee; color: #666; flex: 1; }
+        .btn-ws { background: var(--whatsapp); color: white; width: 100%; display: none; align-items: center; justify-content: center; gap: 8px; }
 
         .footer { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #777; font-weight: bold; }
     </style>
@@ -92,14 +95,18 @@
         <p id="label-status" style="font-size: 0.8rem; margin-bottom: 8px; font-weight: bold;"></p>
         <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 10px;" placeholder="Nombre - Escribe 'pago' o 'debe'">
         <input type="tel" id="c-celular" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;" placeholder="WhatsApp / Celular">
+        
         <div class="modal-btns">
-            <button class="btn-save" onclick="guardar()">Guardar</button>
-            <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+            <button id="btn-ws" class="btn-ws" onclick="enviarCobroWS()">💬 Cobrar por WhatsApp</button>
+            <div class="btn-row">
+                <button class="btn-save" onclick="guardar()">Guardar</button>
+                <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+            </div>
         </div>
     </div>
 
     <div class="footer">
-        App desarrollada por Vibras Positivas Derechos de Autor (3117700431)
+        App desarrollada por Vibras Positivas (3117700431) derechos de autor
     </div>
 
     <script>
@@ -161,6 +168,7 @@
             const label = document.getElementById('label-status');
             const inputNom = document.getElementById('c-nombre');
             const inputCel = document.getElementById('c-celular');
+            const btnWs = document.getElementById('btn-ws');
             
             if (rifaBD[n]) {
                 const txt = rifaBD[n].nombre.toLowerCase();
@@ -169,11 +177,13 @@
                 else { label.innerText = "ESTADO: REGISTRADO"; label.style.color = "#555"; }
                 inputNom.value = rifaBD[n].nombre;
                 inputCel.value = rifaBD[n].celular || "";
+                btnWs.style.display = (rifaBD[n].celular) ? "flex" : "none";
             } else {
                 label.innerText = "ESTADO: DISPONIBLE";
                 label.style.color = "gray";
                 inputNom.value = "";
                 inputCel.value = "";
+                btnWs.style.display = "none";
             }
             document.getElementById('modal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
@@ -192,6 +202,17 @@
             localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
             dibujarGrid();
             cerrarModal();
+        }
+
+        function enviarCobroWS() {
+            if (!numSel || !rifaBD[numSel]) return;
+            const nombre = rifaBD[numSel].nombre;
+            const celular = rifaBD[numSel].celular;
+            const rifaNom = configBD.t || "la rifa";
+            const precio = configBD.pr || "";
+            
+            const mensaje = encodeURIComponent(`Hola ${nombre}, te saludo de ${rifaNom}. Te escribo para el cobro del número ${numSel} por valor de ${precio}. ¡Muchas gracias!`);
+            window.open(`https://wa.me/57${celular.replace(/\s+/g, '')}?text=${mensaje}`, '_blank');
         }
 
         function exportarExcel() {
