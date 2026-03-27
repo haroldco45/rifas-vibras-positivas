@@ -16,9 +16,10 @@
         .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
         .admin-config input { width: calc(100% - 24px); padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
 
-        .backup-section { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
-        .btn-backup { background: #2c3e50; color: white; font-size: 0.8rem; padding: 8px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
-        .btn-import { background: #8e44ad; color: white; font-size: 0.8rem; padding: 8px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
+        .backup-section { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
+        .btn-backup { background: #2c3e50; color: white; font-size: 0.8rem; padding: 10px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
+        .btn-import { background: #8e44ad; color: white; font-size: 0.8rem; padding: 10px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
+        .btn-excel { background: #1d6f42; color: white; font-size: 0.8rem; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 5px; font-weight: bold; }
 
         .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: var(--verde-header); color: white; padding: 20px; text-align: center; }
@@ -29,14 +30,12 @@
         .full-row { grid-column: span 2; }
         .price-tag { background: #e9f0e4; grid-column: span 2; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; color: var(--verde-header); font-size: 1.1rem; }
 
-        /* LEYENDA DE COLORES */
-        .leyenda { display: flex; gap: 15px; padding: 10px; font-size: 0.8rem; font-weight: bold; }
+        .leyenda { display: flex; justify-content: center; gap: 15px; padding: 10px; font-size: 0.8rem; font-weight: bold; }
         .punto { height: 12px; width: 12px; border-radius: 3px; display: inline-block; vertical-align: middle; }
 
         .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 15px; }
         .num { aspect-ratio: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; color: #333; }
         
-        /* ESTADOS NUEVOS */
         .num.estado-pago { background: var(--verde-pago) !important; color: white !important; border-color: #1e8449 !important; }
         .num.estado-debe { background: var(--rojo-debe) !important; color: white !important; border-color: #943126 !important; }
         .num.estado-registrado { background: #ddd; color: #555; }
@@ -66,14 +65,13 @@
         <div class="backup-section">
             <button class="btn-backup" onclick="exportarDatos()">📥 Descargar Backup</button>
             <button class="btn-import" onclick="document.getElementById('fileInput').click()">📤 Subir Backup</button>
+            <button class="btn-excel" onclick="exportarExcel()">📊 Descargar Informe Excel (CSV)</button>
             <input type="file" id="fileInput" style="display:none" onchange="importarDatos(event)">
         </div>
     </div>
 
     <div class="card">
-        <div class="header">
-            <h1 id="out-titulo">Control de Rifa</h1>
-        </div>
+        <div class="header"><h1 id="out-titulo">Control de Rifa</h1></div>
         <div class="info-bar">
             <div class="price-tag">Valor del número: <span id="out-precio">$0</span></div>
             <div><strong>🎁 Premio:</strong> <br><span id="out-premio">---</span></div>
@@ -81,12 +79,10 @@
             <div class="full-row"><strong>🎰 Lotería:</strong> <span id="out-lote">---</span></div>
             <div class="full-row"><strong>👤 Contacto:</strong> <span id="out-contacto">---</span></div>
         </div>
-
         <div class="leyenda">
             <span><span class="punto" style="background:var(--verde-pago)"></span> PAGO</span>
             <span><span class="punto" style="background:var(--rojo-debe)"></span> DEBE</span>
         </div>
-
         <div class="grid" id="gridConten"></div>
     </div>
 
@@ -146,19 +142,12 @@
                 let n = i.toString().padStart(2, '0');
                 let div = document.createElement('div');
                 div.className = 'num';
-                
-                // LÓGICA DE COLORES SEGÚN EL TEXTO
                 if (rifaBD[n]) {
                     const nombreMinus = rifaBD[n].nombre.toLowerCase();
-                    if (nombreMinus.includes('pago')) {
-                        div.classList.add('estado-pago');
-                    } else if (nombreMinus.includes('debe')) {
-                        div.classList.add('estado-debe');
-                    } else {
-                        div.classList.add('estado-registrado');
-                    }
+                    if (nombreMinus.includes('pago')) div.classList.add('estado-pago');
+                    else if (nombreMinus.includes('debe')) div.classList.add('estado-debe');
+                    else div.classList.add('estado-registrado');
                 }
-
                 div.innerText = n;
                 div.onclick = () => abrirModal(n);
                 container.appendChild(div);
@@ -170,19 +159,11 @@
             document.getElementById('modal-num').innerText = "Número " + n;
             const label = document.getElementById('label-status');
             const inputNom = document.getElementById('c-nombre');
-            
             if (rifaBD[n]) {
                 const txt = rifaBD[n].nombre.toLowerCase();
-                if(txt.includes('pago')) {
-                    label.innerText = "ESTADO: PAGADO (VERDE)";
-                    label.style.color = "var(--verde-pago)";
-                } else if(txt.includes('debe')) {
-                    label.innerText = "ESTADO: DEBE (ROJO)";
-                    label.style.color = "var(--rojo-debe)";
-                } else {
-                    label.innerText = "ESTADO: REGISTRADO";
-                    label.style.color = "#555";
-                }
+                if(txt.includes('pago')) { label.innerText = "ESTADO: PAGADO"; label.style.color = "var(--verde-pago)"; }
+                else if(txt.includes('debe')) { label.innerText = "ESTADO: DEBE"; label.style.color = "var(--rojo-debe)"; }
+                else { label.innerText = "ESTADO: REGISTRADO"; label.style.color = "#555"; }
                 inputNom.value = rifaBD[n].nombre;
             } else {
                 label.innerText = "ESTADO: DISPONIBLE";
@@ -207,7 +188,35 @@
             cerrarModal();
         }
 
-        // --- FUNCIONES DE BACKUP ---
+        // --- EXPORTAR A EXCEL (CSV) ---
+        function exportarExcel() {
+            let csvContent = "\uFEFF"; // BOM para que Excel reconozca tildes
+            csvContent += "Numero;Comprador;Estado\n";
+
+            for (let i = 0; i < 100; i++) {
+                let n = i.toString().padStart(2, '0');
+                let comprador = "Disponible";
+                let estado = "Libre";
+
+                if (rifaBD[n]) {
+                    comprador = rifaBD[n].nombre;
+                    const txt = comprador.toLowerCase();
+                    if (txt.includes('pago')) estado = "PAGADO";
+                    else if (txt.includes('debe')) estado = "DEBE";
+                    else estado = "REGISTRADO";
+                }
+                csvContent += `${n};${comprador};${estado}\n`;
+            }
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `informe_rifa_${configBD.t || 'vibras'}.csv`;
+            a.click();
+        }
+
+        // --- BACKUP ---
         function exportarDatos() {
             const data = { rifa: rifaBD, config: configBD };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -225,8 +234,7 @@
             reader.onload = function(e) {
                 const data = JSON.parse(e.target.result);
                 if (data.rifa && data.config) {
-                    rifaBD = data.rifa;
-                    configBD = data.config;
+                    rifaBD = data.rifa; configBD = data.config;
                     localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
                     localStorage.setItem('cfg_rifa_vibras', JSON.stringify(configBD));
                     iniciar();
