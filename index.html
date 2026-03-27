@@ -89,8 +89,9 @@
     <div id="overlay" onclick="cerrarModal()"></div>
     <div id="modal">
         <h2 id="modal-num" style="color: var(--verde-header);">Número 00</h2>
-        <p id="label-status" style="font-size: 0.9rem; margin-bottom: 10px; font-weight: bold;"></p>
-        <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;" placeholder="Nombre - Escribe 'pago' o 'debe'">
+        <p id="label-status" style="font-size: 0.8rem; margin-bottom: 8px; font-weight: bold;"></p>
+        <input type="text" id="c-nombre" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 10px;" placeholder="Nombre - Escribe 'pago' o 'debe'">
+        <input type="tel" id="c-celular" style="width: 90%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;" placeholder="WhatsApp / Celular">
         <div class="modal-btns">
             <button class="btn-save" onclick="guardar()">Guardar</button>
             <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
@@ -159,16 +160,20 @@
             document.getElementById('modal-num').innerText = "Número " + n;
             const label = document.getElementById('label-status');
             const inputNom = document.getElementById('c-nombre');
+            const inputCel = document.getElementById('c-celular');
+            
             if (rifaBD[n]) {
                 const txt = rifaBD[n].nombre.toLowerCase();
                 if(txt.includes('pago')) { label.innerText = "ESTADO: PAGADO"; label.style.color = "var(--verde-pago)"; }
                 else if(txt.includes('debe')) { label.innerText = "ESTADO: DEBE"; label.style.color = "var(--rojo-debe)"; }
                 else { label.innerText = "ESTADO: REGISTRADO"; label.style.color = "#555"; }
                 inputNom.value = rifaBD[n].nombre;
+                inputCel.value = rifaBD[n].celular || "";
             } else {
                 label.innerText = "ESTADO: DISPONIBLE";
                 label.style.color = "gray";
                 inputNom.value = "";
+                inputCel.value = "";
             }
             document.getElementById('modal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
@@ -181,33 +186,32 @@
 
         function guardar() {
             const nom = document.getElementById('c-nombre').value;
+            const cel = document.getElementById('c-celular').value;
             if (nom.trim() === "") { delete rifaBD[numSel]; } 
-            else { rifaBD[numSel] = { nombre: nom }; }
+            else { rifaBD[numSel] = { nombre: nom, celular: cel }; }
             localStorage.setItem('bd_rifa_vibras', JSON.stringify(rifaBD));
             dibujarGrid();
             cerrarModal();
         }
 
-        // --- EXPORTAR A EXCEL (CSV) ---
         function exportarExcel() {
-            let csvContent = "\uFEFF"; // BOM para que Excel reconozca tildes
-            csvContent += "Numero;Comprador;Estado\n";
-
+            let csvContent = "\uFEFF"; 
+            csvContent += "Numero;Comprador;Celular;Estado\n";
             for (let i = 0; i < 100; i++) {
                 let n = i.toString().padStart(2, '0');
                 let comprador = "Disponible";
+                let celular = "N/A";
                 let estado = "Libre";
-
                 if (rifaBD[n]) {
                     comprador = rifaBD[n].nombre;
+                    celular = rifaBD[n].celular || "Sin número";
                     const txt = comprador.toLowerCase();
                     if (txt.includes('pago')) estado = "PAGADO";
                     else if (txt.includes('debe')) estado = "DEBE";
                     else estado = "REGISTRADO";
                 }
-                csvContent += `${n};${comprador};${estado}\n`;
+                csvContent += `${n};${comprador};${celular};${estado}\n`;
             }
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -216,7 +220,6 @@
             a.click();
         }
 
-        // --- BACKUP ---
         function exportarDatos() {
             const data = { rifa: rifaBD, config: configBD };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
