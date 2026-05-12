@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Rifas | Vibras Positivas</title>
+    <title>Gestión de Rifas | VIBRAS POSITIVAS HM</title>
     <style>
         :root { 
             --verde-pago: #27ae60; 
@@ -11,10 +11,25 @@
             --gris-f: #f4f7f1; 
             --verde-header: #5d7a4d;
             --whatsapp: #25d366;
+            --alerta: #e67e22;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-f); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        .admin-config { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
+        /* Reloj de Caducidad */
+        .timer-container {
+            background: #2c3e50;
+            color: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-bottom: 3px solid var(--alerta);
+        }
+
+        .admin-config { background: white; padding: 15px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
         .admin-config input { width: calc(100% - 24px); padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
 
         .backup-section { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
@@ -22,7 +37,7 @@
         .btn-import { background: #8e44ad; color: white; font-size: 0.8rem; padding: 10px; border: none; border-radius: 5px; cursor: pointer; flex: 1; }
         .btn-excel { background: #1d6f42; color: white; font-size: 0.8rem; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 5px; font-weight: bold; }
 
-        .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        .card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
         .header { background: var(--verde-header); color: white; padding: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
 
@@ -41,6 +56,9 @@
         .num.estado-debe { background: var(--rojo-debe) !important; color: white !important; border-color: #943126 !important; }
         .num.estado-registrado { background: #ddd; color: #555; }
 
+        /* Bloqueo por expiración */
+        #bloqueo-expirado { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+
         #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 320px; text-align: center; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; }
         
@@ -55,6 +73,10 @@
     </style>
 </head>
 <body>
+
+    <div class="timer-container">
+        ⏳ Tiempo de uso restante: <span id="reloj-caducidad">Calculando...</span>
+    </div>
 
     <div class="admin-config">
         <strong style="color: var(--verde-header);">⚙️ Configurar Datos:</strong>
@@ -74,6 +96,14 @@
     </div>
 
     <div class="card">
+        <!-- Pantalla de Bloqueo -->
+        <div id="bloqueo-expirado">
+            <h2 style="color: var(--rojo-debe);">⚠️ LICENCIA EXPIRADA</h2>
+            <p>El periodo de prueba de 10 días ha finalizado.</p>
+            <p>Contacte a <strong>VIBRAS POSITIVAS HM</strong> para renovar su acceso.</p>
+            <button class="btn-save" onclick="location.reload()">Reintentar</button>
+        </div>
+
         <div class="header"><h1 id="out-titulo">Control de Rifa</h1></div>
         <div class="info-bar">
             <div class="price-tag">Valor del número: <span id="out-precio">$0</span></div>
@@ -106,7 +136,7 @@
     </div>
 
     <div class="footer">
-        App desarrollada por Vibras Positivas (3117700431) derechos de autor
+        © Vibras Positivas HM - Todos los derechos reservados
     </div>
 
     <script>
@@ -114,7 +144,51 @@
         let configBD = JSON.parse(localStorage.getItem('cfg_rifa_vibras')) || { t:'', p:'', f:'', c:'', pr:'', lt:'' };
         let numSel = null;
 
+        // Lógica de Caducidad (10 días)
+        const DURACION_LICENCIA = 10 * 24 * 60 * 60 * 1000; // 10 días en milisegundos
+
+        function gestionarCaducidad() {
+            let fechaInicio = localStorage.getItem('fecha_inicio_vibras');
+            
+            if (!fechaInicio) {
+                fechaInicio = new Date().getTime();
+                localStorage.setItem('fecha_inicio_vibras', fechaInicio);
+            }
+
+            const ahora = new Date().getTime();
+            const transcurrido = ahora - fechaInicio;
+            const restante = DURACION_LICENCIA - transcurrido;
+
+            if (restante <= 0) {
+                document.getElementById('bloqueo-expirado').style.display = 'flex';
+                document.getElementById('reloj-caducidad').innerText = "EXPIRADO";
+                return false;
+            }
+
+            actualizarReloj(restante);
+            return true;
+        }
+
+        function actualizarReloj(ms) {
+            const dias = Math.floor(ms / (24 * 60 * 60 * 1000));
+            const horas = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            const minutos = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+            const segundos = Math.floor((ms % (60 * 1000)) / 1000);
+
+            document.getElementById('reloj-caducidad').innerText = 
+                `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+            
+            setTimeout(() => {
+                const nuevaFechaInicio = localStorage.getItem('fecha_inicio_vibras');
+                const nuevoRestante = DURACION_LICENCIA - (new Date().getTime() - nuevaFechaInicio);
+                if(nuevoRestante > 0) actualizarReloj(nuevoRestante);
+                else document.getElementById('bloqueo-expirado').style.display = 'flex';
+            }, 1000);
+        }
+
         function iniciar() {
+            if (!gestionarCaducidad()) return;
+
             document.getElementById('cfg-titulo').value = configBD.t || "";
             document.getElementById('cfg-premio').value = configBD.p || "";
             document.getElementById('cfg-fecha').value = configBD.f || "";
